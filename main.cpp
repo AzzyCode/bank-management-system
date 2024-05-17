@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <map>
+#include <sstream>
 
 
 class Account {
@@ -98,7 +100,59 @@ public:
 };
 
 
+class User {
+private:
+    std::string username {};
+    std::string password {};
 
+public:
+    User(const std::string &userUsername, const std::string userPassword) : username(userUsername), password(userPassword) {};
+
+    std::map<std::string, std::string> users;
+
+    void addUser (const std::string &username, const std::string &password) {
+        users[username] = password;
+    }
+
+    void saveCredentialsToFile(const std::string &filename) const {
+        std::ofstream outFile(filename);
+
+        if (outFile.is_open()) {
+            for (const auto &user : users) {
+                outFile << user.first << " " << user.second << std::endl;
+            }
+            outFile.close();
+        } else {
+            std::cerr << "saveCredentialsToFile Error. Unable to open file for write" << filename << std::endl;
+        }
+    }
+
+    void loadCredentialsFromFile(const std::string &filename) {
+        std::ifstream inFile(filename);
+        std::string line;
+
+        if (inFile.is_open()) {
+           users.clear();
+
+           while (std::getline(inFile, line)) {
+                // Use an isstringstream to parse the line
+                std::istringstream iss(line);
+                std::string username, password;
+
+                // Extract the username and password from the line
+                if (iss >> username >> password) {
+                    users[username] = password;
+                }
+           }
+           inFile.close();
+        } else {
+            std::cerr << "loadCredentialsFromFile Error(). Unable to open file for read" << filename << std::endl;
+        }
+    }
+
+};
+
+            
 
 int main() {
     Bank bank;
