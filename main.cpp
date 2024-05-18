@@ -114,6 +114,13 @@ public:
         users[username] = password;
     }
 
+    bool validateUser(const std::string &username, const std::string &password) {
+        auto it = users.find(username);
+        
+        // Check if the username was found and if the password matches
+        return (it != users.end() && it->second == password);
+    }
+
     void saveCredentialsToFile(const std::string &filename) const {
         std::ofstream outFile(filename);
 
@@ -149,23 +156,60 @@ public:
             std::cerr << "loadCredentialsFromFile Error(). Unable to open file for read" << filename << std::endl;
         }
     }
-
 };
 
             
-
 int main() {
     Bank bank;
+    User user("", "");
+
+    std::string userFile = "users.txt";
+    std::string accountFile = "test_accounts.txt";
+
+    user.loadCredentialsFromFile(userFile);
+
+    std::string username, password;
+    char choice;
+
+    std::cout << "1. Login\n2. Register\nChoose an option: ";
+    std::cin >> choice;
+
+    switch (choice) {
+        case '1':
+            std::cout << "Username: ";
+            std::cin >> username;
+            std::cout << "Password: ";
+            std::cin >> password;
+
+            if (!user.validateUser(username, password)) {
+                std::cout << "Invalid username or password\n";
+                return 1;
+            }
+            break;
+        case '2':
+            std::cout << "Username: ";
+            std::cin >> username;
+            std::cout << "Password: ";
+            std::cin >> password;
+
+            user.addUser(username, password);
+            user.saveCredentialsToFile(userFile);
+            break;
+        default:
+            std::cout << "Invalid choice.\n";
+            return 1;
+    }
+
+
     bank.addAccount(Account(1001, "Alice", 1500.0));
     bank.addAccount(Account(1002, "Bob", 1200.5));
     bank.addAccount((Account(1003, "Charlie", 980.75)));
     bank.addAccount((Account(1004, "Mark", 8400.30)));
 
-    std::string filename = "test_accounts.txt";
 
-    bank.saveToFile(filename);
+    //bank.saveToFile(accountFile);
 
-    bank.loadFromFile(filename);
+    //bank.loadFromFile(accountFile);
 
     return 0;
 }
