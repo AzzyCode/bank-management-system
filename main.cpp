@@ -5,26 +5,41 @@
 #include <fstream>
 #include <map>
 #include <sstream>
+#include <stdexcept>
 
 
 class Account {
 public:
     int accountNumber {};
+    std::string username {};
     std::string name {};
     double balance {};
 
-    Account(int accNumber, std::string custName, double initBalance)
-        : accountNumber(accNumber), name(custName), balance(initBalance) {}
+    Account(int accNumber, std::string &user, std::string &custName, double initBalance)
+        : accountNumber(accNumber), username(user), name(custName), balance(initBalance) {}
 
     void deposit(double amount) {
         balance += amount;
+        recordTransation("Deposit", amount);
     }
 
     void withdraw(double amount) {
         if (balance >= amount){
             balance -= amount;
+            recordTransation("Withdraw", amount);
         } else {
             std::cout << "Insufficient found.\n";
+        }
+    }
+
+    void transfer(Account &toAccount, double amount) {
+        if (balance > amount) {
+            withdraw(amount);
+            toAccount.deposit(amount);
+            recordTransation("Transfer to: " + std::to_string(toAccount.accountNumber), amount);
+            toAccount.recordTransation("Transfer from" + std::to_string(accountNumber), amount);
+        } else {
+            std::cout << "Insufficient funds for transfer.\n";
         }
     }
 
@@ -33,6 +48,28 @@ public:
         //std::cout << "Account Number: " << accountNumber << std::endl;
         //std::cout << "Name: " << name << std::endl;
         //std::cout << "Balance: " << balance << "$" << std::endl;
+    }
+
+    void applyInterest(double rate) {
+        double interest = balance * rate;
+        balance += interest;
+        recordTransation("Interest applied", interest);
+    }
+
+    void displayTransactionHistory() const {
+        std::cout << "Transation history for Account" << accountNumber << ":\n";
+        for (const auto &transaction : transactionHistory) {
+            std::cout << transaction << "\n";
+        } 
+    }
+
+private:
+    std::vector<std::string> transactionHistory;
+
+    void recordTransation(const std::string &type, double amount) {
+        std::ostringstream ss;
+        ss << type << ": " << amount << "$. Balance: " << balance << "$.";
+        transactionHistory.push_back(ss.str());
     }
 };
 
@@ -52,8 +89,8 @@ public:
                 accounts.erase(it);
                 return;
             }
-            std::cout << "Account not found.\n";
         }
+        std::cout << "Account not found.\n";
     }
 
     Account* findAccount(int accNumber) {
@@ -102,13 +139,13 @@ public:
 
 class User {
 private:
-    std::string username {};
-    std::string password {};
+    std::string username;
+    std::string password;
+    std::map<std::string, std::string> users;
 
 public:
     User(const std::string &userUsername, const std::string userPassword) : username(userUsername), password(userPassword) {};
 
-    std::map<std::string, std::string> users;
 
     void addUser (const std::string &username, const std::string &password) {
         users[username] = password;
@@ -200,11 +237,11 @@ int main() {
             return 1;
     }
 
-
-    bank.addAccount(Account(1001, "Alice", 1500.0));
-    bank.addAccount(Account(1002, "Bob", 1200.5));
-    bank.addAccount((Account(1003, "Charlie", 980.75)));
-    bank.addAccount((Account(1004, "Mark", 8400.30)));
+    char userChoice;
+    if (user.validateUser(username, password)) {
+        std::cout << "1. Deposit\n2. Withdraw\n3. Transfer\n4. View Balance\n Choose an option: ";
+        std::cin >> userChoice;
+    }
 
 
     //bank.saveToFile(accountFile);
